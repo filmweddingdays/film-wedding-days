@@ -38,6 +38,11 @@ async function firebaseLoad() {
   const url = `${FIREBASE_CONFIG.databaseURL}/app_data.json?auth=${FIREBASE_CONFIG.apiKey}`;
   try {
     const res = await fetch(url);
+    // 404 means data doesn't exist yet (first time) — that's OK
+    if (res.status === 404) {
+      console.log("No data in Firebase yet (404) — will seed with defaults");
+      return null;
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return data;
