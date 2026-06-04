@@ -1907,7 +1907,10 @@ body::after {
   width: auto;
   flex-shrink: 0;
   opacity: 0.95;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, background-color 0.3s;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(244, 239, 229, 0.6);
 }
 
 .brand:hover .brand-logo {
@@ -2703,6 +2706,10 @@ body::after {
   box-shadow: 0 1px 0 rgba(201, 166, 78, 0.18);
 }
 
+[data-theme="dark"] .brand-logo {
+  background: rgba(34, 29, 22, 0.6);
+}
+
 [data-theme="dark"] .site-footer {
   background: linear-gradient(rgba(28, 24, 19, 0.7), rgba(28, 24, 19, 0.5));
 }
@@ -2783,6 +2790,11 @@ body::after {
   box-shadow: 0 1px 0 rgba(212, 175, 55, 0.12);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+}
+
+[data-theme="black"] .brand-logo {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 [data-theme="black"] .bottom-nav {
