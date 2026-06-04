@@ -1,12 +1,13 @@
 /* ============================================================
-   FILM WEDDING DAYS — FIREBASE SYNC (Realtime Database)
+   FILM WEDDING DAYS — FIREBASE SYNC (REST API)
    Stores app state ({orders, leads, team}) in Firebase
+   Uses REST API instead of SDK (no CDN dependency)
    Falls back to localStorage when offline / not configured
    ============================================================ */
 
 let firebaseSaveTimer = null;
 let firebaseLastError = null;
-let fbDb = null; // Firebase Realtime Database reference
+let firebaseInitialized = false;
 
 function firebaseReady() {
   return (
@@ -14,70 +15,52 @@ function firebaseReady() {
     FIREBASE_ENABLED === true &&
     typeof FIREBASE_CONFIG === "object" &&
     FIREBASE_CONFIG.projectId &&
-    typeof fbDb !== "undefined" &&
-    fbDb !== null
+    firebaseInitialized === true
   );
 }
 
-/* Initialize Firebase Realtime Database */
+/* Initialize Firebase (no SDK needed, just validate config) */
 async function initFirebase() {
   try {
-    console.log("Starting Firebase init...");
-    console.log("FIREBASE_CONFIG:", FIREBASE_CONFIG);
-    console.log("typeof firebase:", typeof firebase);
-
-    // Wait for Firebase SDK to load (max 5 seconds)
-    let attempts = 0;
-    while (typeof firebase === "undefined" && attempts < 50) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
-
-    console.log("After wait - typeof firebase:", typeof firebase, "attempts:", attempts);
-
-    if (typeof firebase === "undefined") {
-      console.error("❌ Firebase SDK not loaded after 5 seconds");
-      setFirebaseStatus("error");
-      return false;
-    }
-
-    // Initialize Firebase
-    console.log("firebase.apps.length:", firebase.apps.length);
-    if (!firebase.apps.length) {
-      firebase.initializeApp(FIREBASE_CONFIG);
-      console.log("✓ Firebase app initialized");
-    }
-
-    fbDb = firebase.database();
-    console.log("✓ Firebase Realtime Database connected");
-    console.log("fbDb:", typeof fbDb);
+    console.log("✓ Firebase REST API ready");
+    console.log("Project:", FIREBASE_CONFIG.projectId);
+    console.log("Database:", FIREBASE_CONFIG.databaseURL);
+    firebaseInitialized = true;
     return true;
   } catch (e) {
-    console.error("❌ Firebase init failed:", e);
-    setFirebaseStatus("error");
+    console.error("Firebase init failed:", e);
     return false;
   }
 }
 
-/* Read data from Firebase */
+/* Read data from Firebase using REST API */
 async function firebaseLoad() {
+  const url = `${FIREBASE_CONFIG.databaseURL}/app_data.json?auth=${FIREBASE_CONFIG.apiKey}`;
   try {
-    const snapshot = await fbDb.ref("app_data").once("value");
-    return snapshot.val();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data;
   } catch (e) {
     throw new Error(`firebase load failed: ${e.message}`);
   }
 }
 
-/* Write data to Firebase */
+/* Write data to Firebase using REST API */
 async function firebaseSaveNow(payload) {
+  const url = `${FIREBASE_CONFIG.databaseURL}/app_data.json?auth=${FIREBASE_CONFIG.apiKey}`;
   try {
-    await fbDb.ref("app_data").set({
-      orders: payload.orders,
-      leads: payload.leads,
-      team: payload.team,
-      updated_at: new Date().toISOString(),
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orders: payload.orders,
+        leads: payload.leads,
+        team: payload.team,
+        updated_at: new Date().toISOString(),
+      }),
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   } catch (e) {
     throw new Error(`firebase save failed: ${e.message}`);
   }
