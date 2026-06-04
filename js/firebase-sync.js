@@ -22,6 +22,10 @@ function firebaseReady() {
 /* Initialize Firebase Realtime Database */
 async function initFirebase() {
   try {
+    console.log("Starting Firebase init...");
+    console.log("FIREBASE_CONFIG:", FIREBASE_CONFIG);
+    console.log("typeof firebase:", typeof firebase);
+
     // Wait for Firebase SDK to load (max 5 seconds)
     let attempts = 0;
     while (typeof firebase === "undefined" && attempts < 50) {
@@ -29,21 +33,28 @@ async function initFirebase() {
       attempts++;
     }
 
+    console.log("After wait - typeof firebase:", typeof firebase, "attempts:", attempts);
+
     if (typeof firebase === "undefined") {
-      console.error("Firebase SDK not loaded");
+      console.error("❌ Firebase SDK not loaded after 5 seconds");
+      setFirebaseStatus("error");
       return false;
     }
 
     // Initialize Firebase
+    console.log("firebase.apps.length:", firebase.apps.length);
     if (!firebase.apps.length) {
       firebase.initializeApp(FIREBASE_CONFIG);
+      console.log("✓ Firebase app initialized");
     }
 
     fbDb = firebase.database();
-    console.log("✓ Firebase initialized successfully");
+    console.log("✓ Firebase Realtime Database connected");
+    console.log("fbDb:", typeof fbDb);
     return true;
   } catch (e) {
-    console.error("Firebase init failed:", e);
+    console.error("❌ Firebase init failed:", e);
+    setFirebaseStatus("error");
     return false;
   }
 }
