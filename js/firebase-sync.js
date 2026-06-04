@@ -33,12 +33,12 @@ async function initFirebase() {
   }
 }
 
-/* Read data from Firebase using REST API */
+/* Read data from Firebase using REST API (no auth needed with public rules) */
 async function firebaseLoad() {
-  const url = `${FIREBASE_CONFIG.databaseURL}/app_data.json?auth=${FIREBASE_CONFIG.apiKey}`;
+  const url = `${FIREBASE_CONFIG.databaseURL}/app_data.json`;
   try {
     const res = await fetch(url);
-    // 404 means data doesn't exist yet (first time) — that's OK
+    // 404 or null means data doesn't exist yet (first time) — that's OK
     if (res.status === 404) {
       console.log("No data in Firebase yet (404) — will seed with defaults");
       return null;
@@ -51,9 +51,9 @@ async function firebaseLoad() {
   }
 }
 
-/* Write data to Firebase using REST API */
+/* Write data to Firebase using REST API (no auth needed with public rules) */
 async function firebaseSaveNow(payload) {
-  const url = `${FIREBASE_CONFIG.databaseURL}/app_data.json?auth=${FIREBASE_CONFIG.apiKey}`;
+  const url = `${FIREBASE_CONFIG.databaseURL}/app_data.json`;
   try {
     const res = await fetch(url, {
       method: "PUT",
@@ -66,6 +66,7 @@ async function firebaseSaveNow(payload) {
       }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    console.log("✓ Data saved to Firebase");
   } catch (e) {
     throw new Error(`firebase save failed: ${e.message}`);
   }
