@@ -204,5 +204,9 @@ setupThemeToggle();
 window.addEventListener("hashchange", render);
 render();
 
-// Pull latest data from cloud on startup
-if (typeof syncWithCloud === "function") syncWithCloud();
+// Initialize Firebase and sync data on startup
+if (typeof initFirebase === "function") {
+  initFirebase().then(() => {
+    if (typeof syncWithFirebase === "function") syncWithFirebase();
+  });
+}

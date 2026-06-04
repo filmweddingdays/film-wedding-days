@@ -463,9 +463,9 @@ function saveAppData(opts = {}) {
   if (!opts.skipHistory && opts.history) {
     recordHistory(opts.history.action, opts.history.label);
   }
-  // Push to cloud on every save
+  // Push to Firebase on every save
   if (!opts.skipHistory) {
-    if (typeof cloudPush === "function") cloudPush({ orders, leads, team });
+    if (typeof firebasePush === "function") firebasePush({ orders, leads, team });
   }
 }
 
