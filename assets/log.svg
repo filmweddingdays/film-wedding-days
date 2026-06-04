@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 88" fill="none" aria-hidden="true">
+  <g stroke="#2c2a26" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M72 14h56l8 10h14a6 6 0 0 1 6 6v28a6 6 0 0 1-6 6H50a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6h14l8-10z" />
+    <rect x="88" y="32" width="24" height="24" rx="5" />
+    <circle cx="100" cy="44" r="9" fill="#fff" stroke="#2c2a26" />
+  </g>
+  <circle cx="96" cy="44" r="5.5" stroke="#c9a227" stroke-width="1.4" fill="none" />
+  <circle cx="104" cy="44" r="5.5" stroke="#c9a227" stroke-width="1.4" fill="none" />
+  <path d="M93.5 39.5c0-1.2 1-2 2.2-1.6.8.3 1.3 1 1.3 1.8" stroke="#c9a227" stroke-width="1.2" fill="none" stroke-linecap="round" />
+  <text x="100" y="72" text-anchor="middle" fill="#2c2a26" font-family="Georgia, 'Times New Roman', serif" font-size="18" font-weight="700" letter-spacing="0.12em">FILM</text>
+  <text x="100" y="84" text-anchor="middle" fill="#8b7355" font-family="Georgia, 'Times New Roman', serif" font-size="8.5" font-weight="600" letter-spacing="0.22em">WEDDING DAYS</text>
+</svg>
