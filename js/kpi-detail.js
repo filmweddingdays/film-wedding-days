@@ -2,6 +2,14 @@
 
 let kpiDetailScope = "month"; // month, year, all
 
+function ucfirst(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function getTotalCrewPayout(order) {
+  return (order.crewPayouts || []).reduce((sum, p) => sum + (p.payout || 0), 0);
+}
+
 function getKpiMetricData(metricType, scope) {
   const scopedOrders = scope === "all" ? orders : scope === "year" ? getOrdersThisYear() : getOrdersForMonth(dashboardPickYear, dashboardPickMonth);
 
@@ -92,7 +100,7 @@ function renderKpiDetailModal(metricType) {
       "Pending": formatCurrency(pending),
       "Progress": `${getDeliverableProgress(order)}%`,
       "Days Away": Math.ceil((startDate - new Date()) / (1000 * 60 * 60 * 24)),
-      "Expense": formatCurrency(getTotalExpense(order)),
+      "Expense": formatCurrency(getTotalExpenses(order)),
       "Shoot Date": formatDate(startDate, {month: "short", day: "numeric"}),
       "Paid": formatCurrency(getTotalCrewPayout(order))
     };
