@@ -86,7 +86,7 @@ function renderBarChart(stats, valueKey = "count") {
           const fullTitle = isMoney ? formatCurrency(val) : String(val);
           const barStyle = val < 0 ? "background:var(--red)" : "";
           return `
-        <div class="chart-col">
+        <div class="chart-col" data-chart-key="${s.key}" data-chart-type="${valueKey}" style="cursor:pointer" title="Click to see details">
           <span class="count" title="${fullTitle}">${display}</span>
           <div class="bar" style="height:${h}%;${barStyle}"></div>
           <span class="label">${escapeHtml(s.label)}</span>
@@ -110,10 +110,10 @@ function renderDualBarChart(stats) {
           const revH = Math.max((rev / max) * 100, rev ? 6 : 2);
           const expH = Math.max((exp / max) * 100, exp ? 6 : 2);
           return `
-        <div class="chart-col chart-col-dual">
+        <div class="chart-col chart-col-dual" data-chart-key="${s.key}" data-chart-type="revenue-expense" style="cursor:pointer" title="Click to see details">
           <div class="dual-bar-group">
-            <div class="bar bar-revenue" style="height:${revH}%" title="Revenue"></div>
-            <div class="bar bar-expense" style="height:${expH}%" title="Expense"></div>
+            <div class="bar bar-revenue" style="height:${revH}%" title="Revenue: ${formatCurrency(rev)}"></div>
+            <div class="bar bar-expense" style="height:${expH}%" title="Expense: ${formatCurrency(exp)}"></div>
           </div>
           <span class="label">${escapeHtml(s.label)}</span>
         </div>`;
@@ -608,6 +608,94 @@ function renderDashboard() {
     </div>`;
 }
 
+/* ── Chart bar click: open month detail dialog ───────────── */
+function openChartMonthDetail(chartKey, chartType) {
+  const [y, m] = chartKey.split("-").map(Number);
+  const monthOrders = orders.filter(o => {
+    const d = parseDate(o.startDate);
+    return d.getFullYear() === y && d.getMonth() === (m - 1);
+  });
+
+  const monthLabel = new Date(y, m - 1, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  const totals = getTotals(monthOrders);
+  const profit = totals.revenue - totals.expenses;
+
+  const summaryHtml = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:0.75rem;margin-bottom:1.25rem">
+      ${[
+        ["Bookings",    monthOrders.length,            "var(--gold)"],
+        ["Revenue",     formatCurrency(totals.revenue), "var(--gold)"],
+        ["Expense",     formatCurrency(totals.expenses),"var(--wine)"],
+        ["Profit",      formatCurrency(profit),         profit >= 0 ? "var(--green)" : "var(--red)"],
+        ["Outstanding", formatCurrency(totals.balance), "var(--warm)"],
+      ].map(([label, val, color]) => `
+        <div style="background:var(--cream);border-radius:10px;padding:0.75rem;border:1px solid var(--blush)">
+          <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--warm);margin-bottom:0.3rem">${label}</div>
+          <div style="font-size:1rem;font-weight:700;color:${color}">${val}</div>
+        </div>`).join("")}
+    </div>`;
+
+  const rows = monthOrders.map(o => {
+    const paid = (o.payments?.advancePaid||0)+(o.payments?.secondPayment||0)+(o.payments?.finalPayment||0);
+    const pending = (o.payments?.totalPackage||0) - paid;
+    const exp = getTotalExpenses(o);
+    const prof = (o.payments?.totalPackage||0) - exp;
+    return `
+      <tr class="chart-detail-row" data-order-id="${o.id}" style="cursor:pointer;transition:background 0.15s"
+        onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
+        <td style="padding:0.6rem 0.75rem">${escapeHtml(o.customerName||"—")}</td>
+        <td style="padding:0.6rem 0.75rem">${escapeHtml(o.eventType||"—")}</td>
+        <td style="padding:0.6rem 0.75rem;white-space:nowrap">${formatDate(parseDate(o.startDate),{month:"short",day:"numeric"})}</td>
+        <td style="padding:0.6rem 0.75rem">${escapeHtml((o.status||"").replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()))}</td>
+        <td style="padding:0.6rem 0.75rem">${formatCurrency(o.payments?.totalPackage||0)}</td>
+        <td style="padding:0.6rem 0.75rem">${formatCurrency(paid)}</td>
+        <td style="padding:0.6rem 0.75rem;color:${pending>0?"var(--wine)":"var(--green)"}">${formatCurrency(pending)}</td>
+        <td style="padding:0.6rem 0.75rem;color:${prof>=0?"var(--green)":"var(--red)"}">${formatCurrency(prof)}</td>
+      </tr>`;
+  }).join("");
+
+  const content = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem">
+      <div>
+        <h3 style="margin:0;font-family:var(--font-display);font-size:1.4rem">${monthLabel}</h3>
+        <p style="margin:0.25rem 0 0;color:var(--warm);font-size:0.85rem">Monthly breakdown — ${monthOrders.length} booking${monthOrders.length!==1?"s":""}</p>
+      </div>
+    </div>
+    ${summaryHtml}
+    <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--blush)">
+      <table style="width:100%;font-size:0.85rem;border-collapse:collapse;min-width:600px">
+        <thead>
+          <tr style="background:var(--cream);position:sticky;top:0">
+            ${["Customer","Type","Date","Status","Package","Received","Pending","Profit"].map(h=>
+              `<th style="text-align:left;padding:0.65rem 0.75rem;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--warm);border-bottom:1px solid var(--blush);white-space:nowrap">${h}</th>`
+            ).join("")}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--warm)">No bookings this month</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+    <p style="margin:0.5rem 0 0;font-size:0.75rem;color:var(--warm);text-align:right">Click any row to view or edit that booking</p>
+  `;
+
+  const modal = document.getElementById("kpi-detail-modal");
+  const contentEl = document.getElementById("kpi-detail-content");
+  if (!modal || !contentEl) return;
+
+  contentEl.innerHTML = content;
+  modal.hidden = false;
+  modal.onclick = e => { if (e.target === modal) closeKpiDetail(); };
+  document.addEventListener("keydown", _kpiEscHandler);
+
+  contentEl.querySelectorAll(".chart-detail-row").forEach(row => {
+    row.addEventListener("click", () => {
+      closeKpiDetail();
+      if (typeof showOrderDetail === "function") showOrderDetail(row.dataset.orderId);
+    });
+  });
+}
+
 function bindDashboardEvents() {
   $$("[data-scope]").forEach((btn) => {
     btn.onclick = () => {
@@ -668,5 +756,12 @@ function bindDashboardEvents() {
       const metricType = card.dataset.metric;
       if (metricType && typeof openKpiDetail === "function") openKpiDetail(metricType);
     };
+  });
+
+  // Chart bars → open month detail dialog
+  $$(".chart-col[data-chart-key]").forEach((col) => {
+    col.addEventListener("mouseenter", () => col.style.opacity = "0.75");
+    col.addEventListener("mouseleave", () => col.style.opacity = "1");
+    col.onclick = () => openChartMonthDetail(col.dataset.chartKey, col.dataset.chartType);
   });
 }
