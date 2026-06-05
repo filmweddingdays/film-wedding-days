@@ -96,7 +96,7 @@ function renderStatCard(icon, label, value, sub, valueClass, metricType) {
     </div>`;
 }
 
-function renderBarChart(stats, valueKey = "count") {
+function renderBarChart(stats, valueKey = "count", isClickable = true) {
   if (!stats.length) {
     return `<p class="meta" style="padding:1rem 0">No data yet</p>`;
   }
@@ -111,8 +111,9 @@ function renderBarChart(stats, valueKey = "count") {
           const display = isMoney ? formatCompactInr(val) : val;
           const fullTitle = isMoney ? formatCurrency(val) : String(val);
           const barStyle = val < 0 ? "background:var(--red)" : "";
+          const clickAttrs = isClickable ? `data-chart-key="${s.key}" data-chart-type="${valueKey}" style="cursor:pointer" title="Click to see details"` : `style="cursor:default"`;
           return `
-        <div class="chart-col" data-chart-key="${s.key}" data-chart-type="${valueKey}" style="cursor:pointer" title="Click to see details">
+        <div class="chart-col" ${clickAttrs}>
           <span class="count" title="${fullTitle}">${display}</span>
           <div class="bar" style="height:${h}%;${barStyle}"></div>
           <span class="label">${escapeHtml(s.label)}</span>
@@ -497,7 +498,8 @@ function renderProfitByStage(orderList) {
     const profit = list.reduce((s, o) => s + getProfit(o), 0);
     return { label: st.label, profit };
   });
-  return renderBarChart(stats, "profit");
+  // Pass false for isClickable since Profit by Stage is not month-based
+  return renderBarChart(stats, "profit", false);
 }
 
 function renderDashboard() {
@@ -594,7 +596,7 @@ function renderDashboard() {
     <div class="charts-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:2rem">
       <div class="card chart-card">
         <h3>Monthly Events</h3>
-        ${renderBarChart(monthStats, "count")}
+        ${renderBarChart(monthStats, "count", true)}
       </div>
       <div class="card chart-card">
         <h3>Revenue vs Expense</h3>
@@ -602,7 +604,7 @@ function renderDashboard() {
       </div>
       <div class="card chart-card">
         <h3>Profit by Month</h3>
-        ${renderBarChart(monthStats, "profit")}
+        ${renderBarChart(monthStats, "profit", true)}
       </div>
       <div class="card chart-card">
         <h3>Profit by Stage</h3>
