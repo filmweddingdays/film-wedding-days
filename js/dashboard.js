@@ -29,39 +29,6 @@ function getOrdersForScope(scope) {
   return getOrdersForMonth(dashboardPickYear, dashboardPickMonth);
 }
 
-function bindDashboardEvents() {
-  // KPI card click handlers
-  $$(".kpi-card[data-metric]").forEach((card) => {
-    card.addEventListener("click", () => {
-      const metricType = card.dataset.metric;
-      if (metricType) {
-        openKpiDetail(metricType);
-      }
-    });
-  });
-
-  // Month picker
-  $$(".month-tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const month = parseInt(btn.dataset.pickMonth);
-      dashboardPickMonth = month;
-      saveAppData();
-      render();
-    });
-  });
-
-  // Scope toggle
-  $$(".scope-toggle button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const scope = btn.dataset.scope;
-      dashboardScope = scope;
-      dashboardExportScope = scope;
-      saveAppData();
-      render();
-    });
-  });
-}
-
 function getDashboardScopeLabel(scope) {
   if (scope === "month") {
     return new Date(dashboardPickYear, dashboardPickMonth, 1).toLocaleDateString("en-IN", {
@@ -692,6 +659,14 @@ function bindDashboardEvents() {
     row.style.cursor = "pointer";
     row.onclick = () => {
       if (typeof showOrderDetail === "function") showOrderDetail(row.dataset.id);
+    };
+  });
+
+  // KPI cards → open scoped detail dialog
+  $$(".kpi-card[data-metric]").forEach((card) => {
+    card.onclick = () => {
+      const metricType = card.dataset.metric;
+      if (metricType && typeof openKpiDetail === "function") openKpiDetail(metricType);
     };
   });
 }
