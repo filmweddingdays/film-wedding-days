@@ -2709,6 +2709,12 @@ body::after {
   border-color: rgba(212, 175, 55, 0.28);
 }
 
+/* Logo: flip its cream background to black so it blends into the dark header */
+:root[data-theme="light"] .site-header .brand-logo {
+  filter: invert(1) hue-rotate(180deg);
+  border-radius: 8px;
+}
+
 /* ── Dark palette ── */
 :root[data-theme="dark"] {
   --ivory: #16130f;
