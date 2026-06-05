@@ -36,10 +36,10 @@ const EVENT_TYPES = [
   { id: "Montage shoot", label: "Montage shoot", color: "#6c3a3a" },
   { id: "Birthday Shoot", label: "Birthday Shoot", color: "#8a5a2a" },
   { id: "Eluthingal", label: "Eluthingal", color: "#7a6a4a" },
-  { id: "Product Shoot", label: "Product Shoot", color: "#6a4a2a" },
   { id: "School", label: "School", color: "#8a6a3a" },
   { id: "BNI", label: "BNI", color: "#7a5a4a" },
   { id: "Opening", label: "Opening", color: "#9a7a4a" },
+  { id: "Promotion", label: "Promotion", color: "#5c3a3a" },
 ];
 
 /* Order statuses — graduated earth-tone scale: stone → brass → wine → green → ink */
