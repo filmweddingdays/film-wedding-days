@@ -247,7 +247,20 @@ function openKpiDetail(metricType) {
   _drawKpiDialog();
 
   const modal = document.getElementById("kpi-detail-modal");
-  if (modal) modal.hidden = false;
+  if (modal) {
+    modal.hidden = false;
+    // Click outside the dialog (on the backdrop) closes it
+    modal.onclick = (e) => {
+      if (e.target === modal) closeKpiDetail();
+    };
+  }
+
+  // Esc key closes it too
+  document.addEventListener("keydown", _kpiEscHandler);
+}
+
+function _kpiEscHandler(e) {
+  if (e.key === "Escape") closeKpiDetail();
 }
 
 function _drawKpiDialog() {
@@ -279,4 +292,5 @@ function _drawKpiDialog() {
 function closeKpiDetail() {
   const modal = document.getElementById("kpi-detail-modal");
   if (modal) modal.hidden = true;
+  document.removeEventListener("keydown", _kpiEscHandler);
 }
