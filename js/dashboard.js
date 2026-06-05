@@ -725,7 +725,7 @@ function openChartMonthDetail(chartKey, chartType) {
 }
 
 function bindDashboardEvents() {
-  $$("[data-scope]").forEach((btn) => {
+  $$(".scope-toggle [data-scope]").forEach((btn) => {
     btn.onclick = () => {
       dashboardScope = btn.dataset.scope;
       if (dashboardScope === "month") {
