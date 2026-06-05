@@ -8,6 +8,7 @@ let dashboardExportScope = "month";
 let dashboardScope = "month";
 let dashboardPickYear = new Date().getFullYear();
 let dashboardPickMonth = new Date().getMonth();
+let dashboardPickCustomYear = new Date().getFullYear(); // for "pick-year" scope
 let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth();
 let calDay = new Date().getDate();

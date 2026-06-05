@@ -238,10 +238,10 @@ function renderKpiDialog(metricType, scope, year, month) {
 
 /* ── open / close ────────────────────────────────────────── */
 function openKpiDetail(metricType) {
-  // inherit current dashboard scope
+  // inherit current dashboard scope (map pick-year → year for dialog)
   kpiDetailMetric = metricType;
-  kpiDetailScope  = dashboardScope || "month";
-  kpiDetailYear   = dashboardPickYear  || new Date().getFullYear();
+  kpiDetailScope  = (dashboardScope === "pick-year") ? "year" : (dashboardScope || "month");
+  kpiDetailYear   = (dashboardScope === "pick-year") ? (dashboardPickCustomYear || new Date().getFullYear()) : (dashboardPickYear || new Date().getFullYear());
   kpiDetailMonth  = dashboardPickMonth !== undefined ? dashboardPickMonth : new Date().getMonth();
 
   _drawKpiDialog();

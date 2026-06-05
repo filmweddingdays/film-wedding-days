@@ -26,6 +26,7 @@ function getOrdersThisYear() {
 function getOrdersForScope(scope) {
   if (scope === "all") return [...orders];
   if (scope === "year") return getOrdersThisYear();
+  if (scope === "pick-year") return orders.filter(o => parseDate(o.startDate).getFullYear() === dashboardPickCustomYear);
   return getOrdersForMonth(dashboardPickYear, dashboardPickMonth);
 }
 
@@ -37,7 +38,32 @@ function getDashboardScopeLabel(scope) {
     });
   }
   if (scope === "year") return String(new Date().getFullYear());
+  if (scope === "pick-year") return String(dashboardPickCustomYear);
   return "All time";
+}
+
+function renderYearPickerHtml() {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let y = currentYear; y >= 2020; y--) years.push(y);
+  return `
+    <div class="month-picker card" id="dashboard-year-picker">
+      <div class="month-picker-header">
+        <span class="month-picker-title">Select Year</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;padding:0.25rem 0">
+        ${years.map(y => `
+          <button type="button" class="year-pick-btn ${y === dashboardPickCustomYear ? "active" : ""}"
+            data-pick-year="${y}"
+            style="padding:0.45rem 1rem;border-radius:8px;border:1px solid var(--blush);
+                   background:${y === dashboardPickCustomYear ? "var(--gold)" : "var(--white)"};
+                   color:${y === dashboardPickCustomYear ? "#fff" : "var(--warm)"};
+                   font-size:0.85rem;font-weight:500;cursor:pointer;font-family:inherit;
+                   transition:background 0.15s,color 0.15s">
+            ${y}
+          </button>`).join("")}
+      </div>
+    </div>`;
 }
 
 function renderMonthPickerHtml() {
@@ -523,10 +549,12 @@ function renderDashboard() {
       <div class="scope-toggle">
         <button type="button" data-scope="month" class="${scope === "month" ? "active" : ""}">Month wise</button>
         <button type="button" data-scope="year" class="${scope === "year" ? "active" : ""}">This year</button>
+        <button type="button" data-scope="pick-year" class="${scope === "pick-year" ? "active" : ""}">Year</button>
         <button type="button" data-scope="all" class="${scope === "all" ? "active" : ""}">All time</button>
       </div>
     </div>
     ${scope === "month" ? renderMonthPickerHtml() : ""}
+    ${scope === "pick-year" ? renderYearPickerHtml() : ""}
     <p class="dashboard-scope-banner card" style="padding:0.75rem 1rem;margin-bottom:1.5rem;font-size:0.9rem">
       Showing <strong>${escapeHtml(scopeLabel)}</strong> — ${scopedOrders.length} event${scopedOrders.length !== 1 ? "s" : ""} by start date
     </p>
@@ -747,6 +775,14 @@ function bindDashboardEvents() {
     row.style.cursor = "pointer";
     row.onclick = () => {
       if (typeof showOrderDetail === "function") showOrderDetail(row.dataset.id);
+    };
+  });
+
+  // Year picker buttons
+  $$(".year-pick-btn[data-pick-year]").forEach((btn) => {
+    btn.onclick = () => {
+      dashboardPickCustomYear = Number(btn.dataset.pickYear);
+      if (typeof render === "function") render();
     };
   });
 
