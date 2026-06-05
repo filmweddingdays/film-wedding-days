@@ -23,6 +23,22 @@ const EVENT_TYPES = [
   { id: "Puberty Shoot", label: "Puberty Shoot", color: "#3f6b4d" },
   { id: "Pre Wedding", label: "Pre Wedding", color: "#9a8a6a" },
   { id: "Post Wedding", label: "Post Wedding", color: "#5c4a38" },
+  { id: "Maxi Shoot", label: "Maxi Shoot", color: "#7a5c3a" },
+  { id: "Colabration", label: "Colabration", color: "#8a5a4a" },
+  { id: "Temple", label: "Temple", color: "#9a7a5a" },
+  { id: "Baby Shoot", label: "Baby Shoot", color: "#b08a6a" },
+  { id: "Ear Piercing", label: "Ear Piercing", color: "#6c5a3a" },
+  { id: "Maxi photo", label: "Maxi photo", color: "#8a7a5a" },
+  { id: "Mangalyam", label: "Mangalyam", color: "#a07a5a" },
+  { id: "Drone shoot", label: "Drone shoot", color: "#5c4a38" },
+  { id: "Awards night", label: "Awards night", color: "#7a5c2a" },
+  { id: "Annual day", label: "Annual day", color: "#9a8a5a" },
+  { id: "Montage shoot", label: "Montage shoot", color: "#6c3a3a" },
+  { id: "Birthday Shoot", label: "Birthday Shoot", color: "#8a5a2a" },
+  { id: "Eluthingal", label: "Eluthingal", color: "#7a6a4a" },
+  { id: "promotion", label: "promotion", color: "#5c3a3a" },
+  { id: "House warming", label: "House warming", color: "#9a6a4a" },
+  { id: "Product Shoot", label: "Product Shoot", color: "#6a4a2a" },
 ];
 
 /* Order statuses — graduated earth-tone scale: stone → brass → wine → green → ink */
