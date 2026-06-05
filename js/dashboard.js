@@ -510,21 +510,32 @@ function renderDashboard() {
   const scope = dashboardScope;
   const scopedOrders = getOrdersForScope(scope);
   const scopeLabel = getDashboardScopeLabel(scope);
-  const allTotals = getTotals(orders);
-  const netProfit = allTotals.revenue - allTotals.expenses;
   const monthStats = getMonthWiseStats(12);
   const typeCounts = getEventTypeCounts();
-  const shootCompleted = orders.filter((o) => isShootCompleted(o)).length;
+
+  // All KPI numbers reflect the selected scope (Month / Year / All time)
+  const scopedTotals = getTotals(scopedOrders);
+  const netProfit = scopedTotals.revenue - scopedTotals.expenses;
+  const shootCompleted = scopedOrders.filter((o) => isShootCompleted(o)).length;
+  const editingPending = scopedOrders.filter((o) => isEditingPending(o)).length;
+  const albumPending = scopedOrders.filter((o) => isAlbumPending(o) && o.status !== "cancelled").length;
+  const upcomingCount = getUpcoming(scopedOrders, 9999).length;
+
+  // Sub-labels describe what the period is
+  const periodSub =
+    scope === "month" ? scopeLabel : scope === "year" ? `Year ${scopeLabel}` : "All time";
+  const eventsLabel =
+    scope === "month" ? "Events This Month" : scope === "year" ? "Events This Year" : "Events All Time";
 
   const kpiCards = [
-    renderStatCard("📋", "Total Bookings", orders.length, `${scopedOrders.length} in ${scopeLabel}`, "", "total-bookings"),
-    renderStatCard("📅", "This Month Events", getOrdersThisMonth().length, "By start date", "", "this-month-events"),
-    renderStatCard("⏭", "Upcoming Events", getUpcoming(orders, 999).length, "From today onward", "", "upcoming-events"),
+    renderStatCard("📋", "Total Bookings", scopedOrders.length, periodSub, "", "total-bookings"),
+    renderStatCard("📅", eventsLabel, scopedOrders.length, "By start date", "", "this-month-events"),
+    renderStatCard("⏭", "Upcoming Events", upcomingCount, "From today onward", "", "upcoming-events"),
     renderStatCard("✓", "Shoot Completed", shootCompleted, "Post-shoot pipeline", "", "shoot-completed"),
-    renderStatCard("✂️", "Editing Pending", getEditingPendingOrders().length, "Awaiting edit", "", "editing-pending"),
-    renderStatCard("📖", "Album Pending", getAlbumPendingOrders().length, "Design / delivery", "", "album-pending"),
-    renderStatCard("₹", "Total Revenue", formatCurrency(allTotals.revenue), "Package value", "", "total-revenue"),
-    renderStatCard("💸", "Total Expense", formatCurrency(allTotals.expenses), "Ops + crew payouts", "", "total-expense"),
+    renderStatCard("✂️", "Editing Pending", editingPending, "Awaiting edit", "", "editing-pending"),
+    renderStatCard("📖", "Album Pending", albumPending, "Design / delivery", "", "album-pending"),
+    renderStatCard("₹", "Total Revenue", formatCurrency(scopedTotals.revenue), "Package value", "", "total-revenue"),
+    renderStatCard("💸", "Total Expense", formatCurrency(scopedTotals.expenses), "Ops + crew payouts", "", "total-expense"),
     renderStatCard(
       "📈",
       "Net Profit",
@@ -533,7 +544,7 @@ function renderDashboard() {
       netProfit >= 0 ? "profit-pos" : "profit-neg",
       "net-profit"
     ),
-    renderStatCard("⚠", "Pending Balance", formatCurrency(allTotals.balance), "Outstanding from clients", "", "pending-balance"),
+    renderStatCard("⚠", "Pending Balance", formatCurrency(scopedTotals.balance), "Outstanding from clients", "", "pending-balance"),
   ].join("");
 
   return `
