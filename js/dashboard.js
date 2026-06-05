@@ -496,10 +496,15 @@ function renderProfitByStage(orderList) {
   const stats = PIPELINE_STAGES.map((st) => {
     const list = active.filter((o) => st.statuses.includes(o.status));
     const profit = list.reduce((s, o) => s + getProfit(o), 0);
-    return { label: st.label, profit };
+    return {
+      key: st.key,  // Use 'key' not 'id'
+      label: st.label,
+      profit,
+      statuses: st.statuses  // Store for later filtering
+    };
   });
-  // Pass false for isClickable since Profit by Stage is not month-based
-  return renderBarChart(stats, "profit", false);
+  // Stage bars are clickable (will use stage key, not month key)
+  return renderBarChart(stats, "profit", true);
 }
 
 function renderDashboard() {
@@ -606,7 +611,7 @@ function renderDashboard() {
         <h3>Profit by Month</h3>
         ${renderBarChart(monthStats, "profit", true)}
       </div>
-      <div class="card chart-card">
+      <div class="card chart-card" data-chart-type="stage">
         <h3>Profit by Stage</h3>
         ${renderProfitByStage(scopedOrders)}
       </div>
@@ -637,6 +642,97 @@ function renderDashboard() {
         </div>
       </div>
     </div>`;
+}
+
+/* ── Chart bar click: open stage detail dialog ───────────── */
+function openChartStageDetail(stageKey) {
+  // Find the stage in PIPELINE_STAGES
+  const stage = PIPELINE_STAGES.find(st => st.key === stageKey);
+  if (!stageKey || !stage) return;
+
+  // Get orders in this stage (from current scope)
+  const scopedOrders = getOrdersForScope(dashboardScope);
+  const stageOrders = scopedOrders.filter(o => stage.statuses.includes(o.status));
+
+  const totals = getTotals(stageOrders);
+  const profit = totals.revenue - totals.expenses;
+
+  // Summary strip
+  const summaryHtml = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:0.75rem;margin-bottom:1.25rem">
+      ${[
+        ["Bookings",    stageOrders.length,            "var(--gold)"],
+        ["Revenue",     formatCurrency(totals.revenue), "var(--gold)"],
+        ["Expense",     formatCurrency(totals.expenses),"var(--wine)"],
+        ["Profit",      formatCurrency(profit),         profit >= 0 ? "var(--green)" : "var(--red)"],
+        ["Outstanding", formatCurrency(totals.balance), "var(--warm)"],
+      ].map(([label, val, color]) => `
+        <div style="background:var(--cream);border-radius:10px;padding:0.75rem;border:1px solid var(--blush)">
+          <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--warm);margin-bottom:0.3rem">${label}</div>
+          <div style="font-size:1rem;font-weight:700;color:${color}">${val}</div>
+        </div>`).join("")}
+    </div>`;
+
+  // Rows
+  const rows = stageOrders.map(o => {
+    const paid = (o.payments?.advancePaid||0)+(o.payments?.secondPayment||0)+(o.payments?.finalPayment||0);
+    const pending = (o.payments?.totalPackage||0) - paid;
+    const exp = getTotalExpenses(o);
+    const prof = (o.payments?.totalPackage||0) - exp;
+    return `
+      <tr class="chart-detail-row" data-order-id="${o.id}" style="cursor:pointer;transition:background 0.15s"
+        onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background=''">
+        <td style="padding:0.6rem 0.75rem">${escapeHtml(o.customerName||"—")}</td>
+        <td style="padding:0.6rem 0.75rem">${escapeHtml(o.eventType||"—")}</td>
+        <td style="padding:0.6rem 0.75rem;white-space:nowrap">${formatDate(parseDate(o.startDate),{month:"short",day:"numeric"})}</td>
+        <td style="padding:0.6rem 0.75rem">${escapeHtml((o.status||"").replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()))}</td>
+        <td style="padding:0.6rem 0.75rem">${formatCurrency(o.payments?.totalPackage||0)}</td>
+        <td style="padding:0.6rem 0.75rem">${formatCurrency(paid)}</td>
+        <td style="padding:0.6rem 0.75rem;color:${pending>0?"var(--wine)":"var(--green)"}">${formatCurrency(pending)}</td>
+        <td style="padding:0.6rem 0.75rem;color:${prof>=0?"var(--green)":"var(--red)"}">${formatCurrency(prof)}</td>
+      </tr>`;
+  }).join("");
+
+  const content = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem">
+      <div>
+        <h3 style="margin:0;font-family:var(--font-display);font-size:1.4rem">${stage.label}</h3>
+        <p style="margin:0.25rem 0 0;color:var(--warm);font-size:0.85rem">Pipeline stage — ${stageOrders.length} booking${stageOrders.length!==1?"s":""}</p>
+      </div>
+    </div>
+    ${summaryHtml}
+    <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--blush)">
+      <table style="width:100%;font-size:0.85rem;border-collapse:collapse;min-width:600px">
+        <thead>
+          <tr style="background:var(--cream);position:sticky;top:0">
+            ${["Customer","Type","Date","Status","Package","Received","Pending","Profit"].map(h=>
+              `<th style="text-align:left;padding:0.65rem 0.75rem;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--warm);border-bottom:1px solid var(--blush);white-space:nowrap">${h}</th>`
+            ).join("")}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--warm)">No bookings in this stage</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+    <p style="margin:0.5rem 0 0;font-size:0.75rem;color:var(--warm);text-align:right">Click any row to view or edit that booking</p>
+  `;
+
+  const modal = document.getElementById("kpi-detail-modal");
+  const contentEl = document.getElementById("kpi-detail-content");
+  if (!modal || !contentEl) return;
+
+  contentEl.innerHTML = content;
+  modal.hidden = false;
+  modal.onclick = e => { if (e.target === modal) closeKpiDetail(); };
+  document.addEventListener("keydown", _kpiEscHandler);
+
+  contentEl.querySelectorAll(".chart-detail-row").forEach(row => {
+    row.addEventListener("click", () => {
+      closeKpiDetail();
+      if (typeof showOrderDetail === "function") showOrderDetail(row.dataset.orderId);
+    });
+  });
 }
 
 /* ── Chart bar click: open month detail dialog ───────────── */
@@ -797,10 +893,17 @@ function bindDashboardEvents() {
     };
   });
 
-  // Chart bars → open month detail dialog
+  // Chart bars → open detail dialog (month-based or stage-based)
   $$(".chart-col[data-chart-key]").forEach((col) => {
     col.addEventListener("mouseenter", () => col.style.opacity = "0.75");
     col.addEventListener("mouseleave", () => col.style.opacity = "1");
-    col.onclick = () => openChartMonthDetail(col.dataset.chartKey, col.dataset.chartType);
+    col.onclick = () => {
+      const isStageChart = col.closest('[data-chart-type="stage"]');
+      if (isStageChart) {
+        openChartStageDetail(col.dataset.chartKey);
+      } else {
+        openChartMonthDetail(col.dataset.chartKey, col.dataset.chartType);
+      }
+    };
   });
 }
