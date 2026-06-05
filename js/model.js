@@ -359,9 +359,10 @@ function getMonthWiseStats(monthsBack = 12) {
   return stats;
 }
 
-function getEventTypeCounts() {
+function getEventTypeCounts(orderList) {
+  const list = orderList || orders;
   const map = new Map();
-  orders.forEach((o) => {
+  list.forEach((o) => {
     const t = o.eventType || "Wedding";
     map.set(t, (map.get(t) || 0) + 1);
   });

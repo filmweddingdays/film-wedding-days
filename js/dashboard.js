@@ -488,9 +488,10 @@ function renderAnomalies() {
     </div>`;
 }
 
-/* ── Profit grouped by pipeline stage (reports) ── */
-function renderProfitByStage() {
-  const active = orders.filter((o) => o.status !== "cancelled");
+/* ── Profit grouped by pipeline stage (scoped) ── */
+function renderProfitByStage(orderList) {
+  const source = orderList || orders;
+  const active = source.filter((o) => o.status !== "cancelled");
   const stats = PIPELINE_STAGES.map((st) => {
     const list = active.filter((o) => st.statuses.includes(o.status));
     const profit = list.reduce((s, o) => s + getProfit(o), 0);
@@ -504,7 +505,7 @@ function renderDashboard() {
   const scopedOrders = getOrdersForScope(scope);
   const scopeLabel = getDashboardScopeLabel(scope);
   const monthStats = getMonthWiseStats(12);
-  const typeCounts = getEventTypeCounts();
+  const typeCounts = getEventTypeCounts(scopedOrders);  // Scope-aware event counts
 
   // All KPI numbers reflect the selected scope (Month / Year / All time)
   const scopedTotals = getTotals(scopedOrders);
@@ -605,7 +606,7 @@ function renderDashboard() {
       </div>
       <div class="card chart-card">
         <h3>Profit by Stage</h3>
-        ${renderProfitByStage()}
+        ${renderProfitByStage(scopedOrders)}
       </div>
       <div class="card chart-card">
         <h3>Event Type Count</h3>
