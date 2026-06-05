@@ -29,6 +29,39 @@ function getOrdersForScope(scope) {
   return getOrdersForMonth(dashboardPickYear, dashboardPickMonth);
 }
 
+function bindDashboardEvents() {
+  // KPI card click handlers
+  $$(".kpi-card[data-metric]").forEach((card) => {
+    card.addEventListener("click", () => {
+      const metricType = card.dataset.metric;
+      if (metricType) {
+        openKpiDetail(metricType);
+      }
+    });
+  });
+
+  // Month picker
+  $$(".month-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const month = parseInt(btn.dataset.pickMonth);
+      dashboardPickMonth = month;
+      saveAppData();
+      render();
+    });
+  });
+
+  // Scope toggle
+  $$(".scope-toggle button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const scope = btn.dataset.scope;
+      dashboardScope = scope;
+      dashboardExportScope = scope;
+      saveAppData();
+      render();
+    });
+  });
+}
+
 function getDashboardScopeLabel(scope) {
   if (scope === "month") {
     return new Date(dashboardPickYear, dashboardPickMonth, 1).toLocaleDateString("en-IN", {
@@ -60,9 +93,9 @@ function renderMonthPickerHtml() {
     </div>`;
 }
 
-function renderStatCard(icon, label, value, sub, valueClass) {
+function renderStatCard(icon, label, value, sub, valueClass, metricType) {
   return `
-    <div class="card kpi-card stat-card">
+    <div class="card kpi-card stat-card" data-metric="${metricType || ""}" style="cursor:pointer;transition:transform 0.2s,box-shadow 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='none';this.style.boxShadow='var(--shadow)'">
       <span class="stat-icon" aria-hidden="true">${icon}</span>
       <div class="kpi-label">${escapeHtml(label)}</div>
       <div class="kpi-value ${valueClass || ""}">${value}</div>
@@ -484,22 +517,23 @@ function renderDashboard() {
   const shootCompleted = orders.filter((o) => isShootCompleted(o)).length;
 
   const kpiCards = [
-    renderStatCard("📋", "Total Bookings", orders.length, `${scopedOrders.length} in ${scopeLabel}`),
-    renderStatCard("📅", "This Month Events", getOrdersThisMonth().length, "By start date"),
-    renderStatCard("⏭", "Upcoming Events", getUpcoming(orders, 999).length, "From today onward"),
-    renderStatCard("✓", "Shoot Completed", shootCompleted, "Post-shoot pipeline"),
-    renderStatCard("✂️", "Editing Pending", getEditingPendingOrders().length, "Awaiting edit"),
-    renderStatCard("📖", "Album Pending", getAlbumPendingOrders().length, "Design / delivery"),
-    renderStatCard("₹", "Total Revenue", formatCurrency(allTotals.revenue), "Package value"),
-    renderStatCard("💸", "Total Expense", formatCurrency(allTotals.expenses), "Ops + crew payouts"),
+    renderStatCard("📋", "Total Bookings", orders.length, `${scopedOrders.length} in ${scopeLabel}`, "", "total-bookings"),
+    renderStatCard("📅", "This Month Events", getOrdersThisMonth().length, "By start date", "", "this-month-events"),
+    renderStatCard("⏭", "Upcoming Events", getUpcoming(orders, 999).length, "From today onward", "", "upcoming-events"),
+    renderStatCard("✓", "Shoot Completed", shootCompleted, "Post-shoot pipeline", "", "shoot-completed"),
+    renderStatCard("✂️", "Editing Pending", getEditingPendingOrders().length, "Awaiting edit", "", "editing-pending"),
+    renderStatCard("📖", "Album Pending", getAlbumPendingOrders().length, "Design / delivery", "", "album-pending"),
+    renderStatCard("₹", "Total Revenue", formatCurrency(allTotals.revenue), "Package value", "", "total-revenue"),
+    renderStatCard("💸", "Total Expense", formatCurrency(allTotals.expenses), "Ops + crew payouts", "", "total-expense"),
     renderStatCard(
       "📈",
       "Net Profit",
       formatCurrency(netProfit),
       "Revenue − expenses",
-      netProfit >= 0 ? "profit-pos" : "profit-neg"
+      netProfit >= 0 ? "profit-pos" : "profit-neg",
+      "net-profit"
     ),
-    renderStatCard("⚠", "Pending Balance", formatCurrency(allTotals.balance), "Outstanding from clients"),
+    renderStatCard("⚠", "Pending Balance", formatCurrency(allTotals.balance), "Outstanding from clients", "", "pending-balance"),
   ].join("");
 
   return `
