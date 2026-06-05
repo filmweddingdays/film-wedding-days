@@ -2709,8 +2709,11 @@ body::after {
   border-color: rgba(212, 175, 55, 0.28);
 }
 
-/* Logo: flip its cream background to black so it blends into the dark header */
-:root[data-theme="light"] .site-header .brand-logo {
+/* Logo: flip its cream background to dark so it blends into any dark header
+   (applies to Light's black header, Dark espresso, and Midnight Black) */
+:root[data-theme="light"] .site-header .brand-logo,
+:root[data-theme="dark"] .site-header .brand-logo,
+:root[data-theme="black"] .site-header .brand-logo {
   filter: invert(1) hue-rotate(180deg);
   border-radius: 8px;
 }
